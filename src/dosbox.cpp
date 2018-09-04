@@ -766,6 +766,9 @@ void DOSBOX_Init(void) {
 	Pstring = secprop->Add_string("keyboardlayout",Property::Changeable::WhenIdle, "auto");
 	Pstring->Set_help("Language code of the keyboard layout (or none).");
 
+	Pint = secprop->Add_int("files",Property::Changeable::OnlyAtStart,127);
+	Pint->Set_help("Number of file handles available to DOS programs. (equivalent to \"files=\" in config.sys)");
+
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);

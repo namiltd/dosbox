@@ -2015,6 +2015,10 @@ int main(int argc, char* argv[]) {
 	LOG_MSG("DOSBox version %s",VERSION);
 	LOG_MSG("Copyright 2002-2018 DOSBox Team, published under GNU GPL.");
 	LOG_MSG("---");
+	LOG_MSG("SVN build compiled on %s - https://github.com/namiltd/dosbox", __DATE__);
+	LOG_MSG("featuring:");
+	LOG_MSG("  FILES= adjustable by Kippesoep");
+	LOG_MSG("---");
 
 	/* Init SDL */
 #if SDL_VERSION_ATLEAST(1, 2, 14)
