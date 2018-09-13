@@ -23,6 +23,8 @@
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"
+#include "bios.h"
+#include "mem.h"
 
 #define DISNEY_BASE 0x0378
 
@@ -366,6 +368,8 @@ public:
 	DISNEY(Section* configuration):Module_base(configuration) {
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("disney")) return;
+		if(mem_readw(BIOS_ADDRESS_LPT1) != 0) return;
+		BIOS_SetLPTPort(0,0x378);
 	
 		WriteHandler.Install(DISNEY_BASE,disney_write,IO_MB,3);
 		ReadHandler.Install(DISNEY_BASE,disney_read,IO_MB,3);
@@ -381,6 +385,7 @@ public:
 
 	}
 	~DISNEY(){
+		BIOS_SetLPTPort(0,0);
 		DISNEY_disable(0);
 		if (disney.mo)
 			delete disney.mo;

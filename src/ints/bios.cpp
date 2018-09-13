@@ -31,6 +31,7 @@
 #include "mouse.h"
 #include "setup.h"
 #include "serialport.h"
+#include "parport.h"
 #include <time.h>
 
 #if defined(DB_HAVE_CLOCK_GETTIME) && ! defined(WIN32)
@@ -581,15 +582,29 @@ static Bitu INT12_Handler(void) {
 }
 
 static Bitu INT17_Handler(void) {
-	LOG(LOG_BIOS,LOG_NORMAL)("INT17:Function %X",reg_ah);
+	if (reg_ah > 0x2 || reg_dx > 0x2) {	// 0-2 printer port functions
+										// and no more than 3 parallel ports
+		LOG_MSG("BIOS INT17: Unhandled call AH=%2X DX=%4x",reg_ah,reg_dx);
+		return CBRET_NONE;
+	}
 	switch(reg_ah) {
-	case 0x00:		/* PRINTER: Write Character */
-		reg_ah=1;	/* Report a timeout */
+	case 0x00:		// PRINTER: Write Character
+		if(parallelPortObjects[reg_dx]!=0) {
+			if(parallelPortObjects[reg_dx]->Putchar(reg_al))
+				reg_ah=parallelPortObjects[reg_dx]->getPrinterStatus();
+			else reg_ah=1;
+		}
 		break;
-	case 0x01:		/* PRINTER: Initialize port */
+	case 0x01:		// PRINTER: Initialize port
+		if(parallelPortObjects[reg_dx]!= 0) {
+			parallelPortObjects[reg_dx]->initialize();
+			reg_ah=parallelPortObjects[reg_dx]->getPrinterStatus();
+		}
 		break;
-	case 0x02:		/* PRINTER: Get Status */
-		reg_ah=0;	
+	case 0x02:		// PRINTER: Get Status
+		if(parallelPortObjects[reg_dx] != 0)
+			reg_ah=parallelPortObjects[reg_dx]->getPrinterStatus();
+		//LOG_MSG("printer status: %x",reg_ah);
 		break;
 	};
 	return CBRET_NONE;
@@ -1016,6 +1031,9 @@ public:
 		/* tandy DAC can be requested in tandy_sound.cpp by initializing this field */
 		bool use_tandyDAC=(real_readb(0x40,0xd4)==0xff);
 
+		// Disney workaround
+		Bit16u disney_port = mem_readw(BIOS_ADDRESS_LPT1);
+
 		/* Clear the Bios Data Area (0x400-0x5ff, 0x600- is accounted to DOS) */
 		for (Bit16u i=0;i<0x200;i++) real_writeb(0x40,i,0);
 
@@ -1202,48 +1220,12 @@ public:
 		
 		// port timeouts
 		// always 1 second even if the port does not exist
-		mem_writeb(BIOS_LPT1_TIMEOUT,1);
-		mem_writeb(BIOS_LPT2_TIMEOUT,1);
-		mem_writeb(BIOS_LPT3_TIMEOUT,1);
+		BIOS_SetLPTPort(0, disney_port);
+		for(Bitu i = 1; i < 3; i++) BIOS_SetLPTPort(i, 0);
 		mem_writeb(BIOS_COM1_TIMEOUT,1);
 		mem_writeb(BIOS_COM2_TIMEOUT,1);
 		mem_writeb(BIOS_COM3_TIMEOUT,1);
 		mem_writeb(BIOS_COM4_TIMEOUT,1);
-		
-		/* detect parallel ports */
-		Bitu ppindex=0; // number of lpt ports
-		if ((IO_Read(0x378)!=0xff)|(IO_Read(0x379)!=0xff)) {
-			// this is our LPT1
-			mem_writew(BIOS_ADDRESS_LPT1,0x378);
-			ppindex++;
-			if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-				// this is our LPT2
-				mem_writew(BIOS_ADDRESS_LPT2,0x278);
-				ppindex++;
-				if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-					// this is our LPT3
-					mem_writew(BIOS_ADDRESS_LPT3,0x3bc);
-					ppindex++;
-				}
-			} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-				// this is our LPT2
-				mem_writew(BIOS_ADDRESS_LPT2,0x3bc);
-				ppindex++;
-			}
-		} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-			// this is our LPT1
-			mem_writew(BIOS_ADDRESS_LPT1,0x3bc);
-			ppindex++;
-			if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-				// this is our LPT2
-				mem_writew(BIOS_ADDRESS_LPT2,0x278);
-				ppindex++;
-			}
-		} else if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-			// this is our LPT1
-			mem_writew(BIOS_ADDRESS_LPT1,0x278);
-			ppindex++;
-		}
 
 		/* Setup equipment list */
 		// look http://www.bioscentral.com/misc/bda.htm
@@ -1251,11 +1233,6 @@ public:
 		//Bit16u config=0x4400;	//1 Floppy, 2 serial and 1 parallel 
 		Bit16u config = 0x0;
 		
-		// set number of parallel ports
-		// if(ppindex == 0) config |= 0x8000; // looks like 0 ports are not specified
-		//else if(ppindex == 1) config |= 0x0000;
-		if(ppindex == 2) config |= 0x4000;
-		else config |= 0xc000;	// 3 ports
 #if (C_FPU)
 		//FPU
 		config|=0x2;
@@ -1340,6 +1317,33 @@ void BIOS_SetComPorts(Bit16u baseaddr[]) {
 	CMOS_SetRegister(0x14,(Bit8u)(equipmentword&0xff)); //Should be updated on changes
 }
 
+void BIOS_SetLPTPort(Bitu port, Bit16u baseaddr) {
+	switch(port) {
+	case 0:
+		mem_writew(BIOS_ADDRESS_LPT1,baseaddr);
+		mem_writeb(BIOS_LPT1_TIMEOUT, 10);
+		break;
+	case 1:
+		mem_writew(BIOS_ADDRESS_LPT2,baseaddr);
+		mem_writeb(BIOS_LPT2_TIMEOUT, 10);
+		break;
+	case 2:
+		mem_writew(BIOS_ADDRESS_LPT3,baseaddr);
+		mem_writeb(BIOS_LPT3_TIMEOUT, 10);
+		break;
+	}
+
+	// set equipment word: count ports
+	Bit16u portcount=0;
+	if(mem_readw(BIOS_ADDRESS_LPT1) != 0) portcount++;
+	if(mem_readw(BIOS_ADDRESS_LPT2) != 0) portcount++;
+	if(mem_readw(BIOS_ADDRESS_LPT3) != 0) portcount++;
+	
+	Bit16u equipmentword = mem_readw(BIOS_CONFIGURATION);
+	equipmentword &= (~0xC000);
+	equipmentword |= (portcount << 14);
+	mem_writew(BIOS_CONFIGURATION,equipmentword);
+}
 
 static BIOS* test;
 

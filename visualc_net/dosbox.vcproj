@@ -39,7 +39,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib sdl_net.lib winmm.lib zlib.lib libpng.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib ws2_32.lib"
+				AdditionalDependencies="opengl32.lib sdl_net.lib winmm.lib zlib.lib libpng.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib ws2_32.lib freetype2110.lib"
 				OutputFile=".\Debug/dosbox.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -646,6 +646,52 @@
 						RelativePath="..\src\hardware\serialport\softmodem.h">
 					</File>
 				</Filter>
+				<Filter
+					Name="parport"
+					Filter="">
+					<File
+						RelativePath="..\src\hardware\parport\directlpt_linux.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\directlpt_linux.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\directlpt_win32.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\directlpt_win32.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\filelpt.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\filelpt.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\parport.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_charmaps.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_charmaps.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_if.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_redir.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_redir.h">
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="gui"
@@ -801,6 +847,23 @@
 					RelativePath="..\src\fpu\fpu_instructions_x86.h">
 				</File>
 			</Filter>
+			<Filter
+				Name="libs"
+				Filter="">
+				<Filter
+					Name="porttalk"
+					Filter="">
+					<File
+						RelativePath="..\src\libs\porttalk\porttalk.cpp">
+					</File>
+					<File
+						RelativePath="..\src\libs\porttalk\porttalk.h">
+					</File>
+					<File
+						RelativePath="..\src\libs\porttalk\PortTalk_IOCTL.h">
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -873,6 +936,9 @@
 			</File>
 			<File
 				RelativePath="..\include\paging.h">
+			</File>
+			<File
+				RelativePath="..\include\parport.h">
 			</File>
 			<File
 				RelativePath="..\include\pci_bus.h">

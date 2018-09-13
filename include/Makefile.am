@@ -24,6 +24,7 @@ midi.h \
 mixer.h \
 modules.h \
 mouse.h \
+parport.h \
 paging.h \
 pci_bus.h \
 pic.h \

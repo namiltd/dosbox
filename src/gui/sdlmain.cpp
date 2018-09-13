@@ -2017,6 +2017,8 @@ int main(int argc, char* argv[]) {
 	LOG_MSG("---");
 	LOG_MSG("SVN build compiled on %s - https://github.com/namiltd/dosbox", __DATE__);
 	LOG_MSG("featuring:");
+	LOG_MSG("  Parallel Port passthrough and Virtual Printer patch, logging enabled");
+	LOG_MSG("  Parallel Port data redircetion to file/device");
 	LOG_MSG("  FILES= adjustable by Kippesoep");
 	LOG_MSG("---");
 

@@ -28,6 +28,7 @@
 #include "dos_inc.h"
 #include "setup.h"
 #include "support.h"
+#include "parport.h"
 #include "serialport.h"
 
 DOS_Block dos;
@@ -160,7 +161,15 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x05:		/* Write Character to PRINTER */
-		E_Exit("DOS:Unhandled call %02X",reg_ah);
+		{
+			for(int i = 0; i < 3; i++) {
+				// look up a parallel port
+				if(parallelPortObjects[i] != NULL) {
+					parallelPortObjects[i]->Putchar(reg_dl);
+					break;
+				}
+			}
+		}
 		break;
 	case 0x06:		/* Direct Console Output / Input */
 		switch (reg_dl) {

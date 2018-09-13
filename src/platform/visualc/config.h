@@ -9,6 +9,10 @@
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
 
+#if C_SSHOT
+#define C_LIBPNG
+#endi
+
 /* Define to 1 to use opengl display output support */
 #define C_OPENGL 1
 
@@ -51,6 +55,10 @@
 
 /* Define to 1 if you want serial passthrough support. */
 #define C_DIRECTSERIAL 1
+
+#define C_DIRECTLPT 1
+
+#define C_PRINTER 1
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #define GCC_UNLIKELY(x) (x)
