@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -1211,6 +1211,11 @@ bool ParseCommand(char* str) {
 		command = "logcode";
 	}
 
+	if (command == "LOGC") { // Create Cpu coverage log file
+		cpuLogType = 3;
+		command = "logcode";
+	}
+
 	if (command == "logcode") { //Shared code between all logs
 		DEBUG_ShowMsg("DEBUG: Starting log\n");
 		cpuLogFile.open("LOGCPU.TXT");
@@ -1338,8 +1343,8 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("INT [nr] / INTT [nr]      - Execute / Trace into interrupt.\n");
 #if C_HEAVY_DEBUG
 		DEBUG_ShowMsg("LOG [num]                 - Write cpu log file.\n");
-		DEBUG_ShowMsg("LOGS/LOGL [num]           - Write short/long cpu log file.\n");
-		DEBUG_ShowMsg("HEAVYLOG                  - Enable/Disable automatic cpu log when dosbox exits.\n");
+		DEBUG_ShowMsg("LOGS/LOGL/LOGC [num]      - Write short/long/cs:ip-only cpu log file.\n");
+		DEBUG_ShowMsg("HEAVYLOG                  - Enable/Disable automatic cpu log when DOSBox exits.\n");
 		DEBUG_ShowMsg("ZEROPROTECT               - Enable/Disable zero code execution detection.\n");
 #endif
 		DEBUG_ShowMsg("SR [reg] [value]          - Set register value.\n");
@@ -2048,6 +2053,11 @@ static void LogCPUInfo(void) {
 static void LogInstruction(Bit16u segValue, Bit32u eipValue,  ofstream& out) {
 	static char empty[23] = { 32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,0 };
 
+	if (cpuLogType == 3) { //Log only cs:ip.
+		out << setw(4) << SegValue(cs) << ":" << setw(8) << reg_eip << endl;
+		return;
+	}
+
 	PhysPt start = GetAddress(segValue,eipValue);
 	char dline[200];Bitu size;
 	size = DasmI386(dline, start, reg_eip, cpu.code.big);
@@ -2288,8 +2298,10 @@ bool CDebugVar::LoadVars(char* name)
 
 	// read number of vars
 	Bit16u num;
-	if (fread(&num,sizeof(num),1,f) != 1) return false;
-
+	if (fread(&num,sizeof(num),1,f) != 1) {
+		fclose(f);
+		return false;
+	}
 	for (Bit16u i=0; i<num; i++) {
 		char name[16];
 		// name
