@@ -61,7 +61,7 @@ public:
 	device_PRN() {
 		SetName("PRN");
 	}
-	bool Read(Bit8u * data,Bit16u * size) {
+	bool Read(Bit8u * /*data*/,Bit16u * /*size*/) {
 		*size=0;
 		LOG(LOG_DOSMISC,LOG_NORMAL)("PRNDEVICE:Read called");
 		return true;
@@ -87,10 +87,6 @@ public:
 		return 0x80A0;
 	}
 	bool Close() {
-   	device_LPT1() { SetName("LPT1");}
-	Bit16u GetInformation(void) { return 0x80A0; }
-	bool Read(Bit8u* /*data*/,Bit16u * /*size*/){
-		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}	
 };
