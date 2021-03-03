@@ -709,6 +709,7 @@ src/libs/porttalk/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
+src/platform/macosx/Makefile
 src/platform/visualc/Makefile
 visualc_net/Makefile
 include/Makefile
